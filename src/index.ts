@@ -22,6 +22,7 @@ export { TransferHandler } from './resources/transfers';
 export { UserHandler } from './resources/users';
 export { VouchersHandler } from './resources/vouchers';
 export { WebhookHandler } from './resources/webhooks';
+export { OrderSuppliersHandler } from './resources/order-suppliers';
 
 // Export types
 export {

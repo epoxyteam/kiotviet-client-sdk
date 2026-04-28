@@ -137,11 +137,8 @@ export class InvoiceHandler {
    * @param isVoidPayment Whether to void the associated payment
    */
   async delete(invoiceId: number, isVoidPayment = false): Promise<void> {
-    await this.client.apiClient.delete('/invoices', {
-      params: {
-        id: invoiceId,
-        isVoidPayment: isVoidPayment,
-      },
+    await this.client.apiClient.delete(`/invoices/${invoiceId}`, {
+      params: { isVoidPayment },
     });
   }
 }

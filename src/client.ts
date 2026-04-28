@@ -23,6 +23,7 @@ import { VouchersHandler } from './resources/vouchers';
 import { SalesChannelsHandler } from './resources/sales-channels';
 import { TrademarksHandler } from './resources/trademarks';
 import { SettingsHandler } from './resources/settings';
+import { OrderSuppliersHandler } from './resources/order-suppliers';
 
 export class KiotVietClient {
   private config: Required<KiotVietClientConfig>;
@@ -50,6 +51,7 @@ export class KiotVietClient {
   public readonly salesChannels: SalesChannelsHandler;
   public readonly trademarks: TrademarksHandler;
   public readonly settings: SettingsHandler;
+  public readonly orderSuppliers: OrderSuppliersHandler;
 
   constructor(config: KiotVietClientConfig) {
     this.validateConfig(config);
@@ -81,6 +83,7 @@ export class KiotVietClient {
     this.salesChannels = new SalesChannelsHandler(this);
     this.trademarks = new TrademarksHandler(this);
     this.settings = new SettingsHandler(this);
+    this.orderSuppliers = new OrderSuppliersHandler(this);
   }
 
   private validateConfig(config: KiotVietClientConfig): void {
