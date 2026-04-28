@@ -80,10 +80,6 @@ export class ProductHandler {
   }
 
   /**
-   * Get a product by its barcode
-   * @param barcode The product barcode
-   */
-  /**
    * Get a product by its code
    * @param code The product code
    */

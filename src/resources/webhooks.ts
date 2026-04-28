@@ -98,7 +98,7 @@ export class WebhookHandler {
   /**
    * Verify webhook signature
    * @param payload The raw webhook payload
-   * @param signature The signature from X-KiotViet-Signature header
+   * @param signature The signature from X-Hub-Signature header
    * @param secret The webhook secret
    */
   verifySignature(payload: string, signature: string, secret: string): boolean {

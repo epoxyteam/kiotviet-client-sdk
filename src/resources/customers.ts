@@ -1,5 +1,5 @@
 import { KiotVietClient } from '../client';
-import { KiotVietListResponse, CustomerCreateParams } from '../types';
+import { KiotVietListResponse, CustomerCreateParams, CustomerUpdateParams } from '../types';
 import { ValidationError } from '../errors';
 import { Customer } from '../types';
 
@@ -84,5 +84,28 @@ export class CustomerHandler {
     });
 
     return response.data.data.length > 0 ? response.data.data[0] : null;
+  }
+
+  /**
+   * Update an existing customer
+   * @param customerId The ID of the customer to update
+   * @param customerData The customer data to update
+   * Documentation: PUT /customers/{id}
+   */
+  async update(customerId: number, customerData: Partial<CustomerUpdateParams>): Promise<Customer> {
+    const response = await this.client.apiClient.put<Customer>(`/customers/${customerId}`, {
+      id: customerId,
+      ...customerData,
+    });
+    return response.data;
+  }
+
+  /**
+   * Delete a customer
+   * @param customerId The ID of the customer to delete
+   * Documentation: DELETE /customers/{id}
+   */
+  async delete(customerId: number): Promise<void> {
+    await this.client.apiClient.delete(`/customers/${customerId}`);
   }
 }
