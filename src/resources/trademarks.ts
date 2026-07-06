@@ -9,6 +9,6 @@ export class TrademarksHandler {
    * @returns TrademarkListResponse
    */
   async list(): Promise<TrademarkListResponse> {
-    return this.client.get('/trademarks');
+    return this.client.get('/trademark');
   }
 }
