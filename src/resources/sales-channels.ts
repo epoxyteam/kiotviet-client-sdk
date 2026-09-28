@@ -6,9 +6,10 @@ export class SalesChannelsHandler {
 
   /**
    * Get list of sales channels
+   * Documentation: 2.18.1. GET /salechannel
    * @returns SalesChannelListResponse
    */
-  async list(): Promise<SalesChannelListResponse> {
-    return this.client.get('/salesChannels');
+  async list(params: Record<string, any> = {}): Promise<SalesChannelListResponse> {
+    return this.client.get('/salechannel', { params });
   }
 }

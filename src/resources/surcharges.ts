@@ -48,6 +48,32 @@ export class SurchargeHandler {
   }
 
   /**
+   * Activate or deactivate a surcharge
+   * @param surchargeId The ID of the surcharge
+   * @param isActive true: cho phép hoạt động; false: ngừng hoạt động
+   * Documentation: 2.10.4. POST /surcharges/{id}/activesurchage  body: { "isActive": bool }
+   */
+  async setActive(surchargeId: number, isActive: boolean): Promise<void> {
+    await this.client.apiClient.post(`/surcharges/${surchargeId}/activesurchage`, { isActive });
+  }
+
+  /**
+   * Activate a surcharge
+   * @param surchargeId The ID of the surcharge
+   */
+  async activate(surchargeId: number): Promise<void> {
+    await this.setActive(surchargeId, true);
+  }
+
+  /**
+   * Deactivate a surcharge
+   * @param surchargeId The ID of the surcharge
+   */
+  async deactivate(surchargeId: number): Promise<void> {
+    await this.setActive(surchargeId, false);
+  }
+
+  /**
    * Delete a surcharge
    * @param surchargeId The ID of the surcharge to delete
    */

@@ -23,6 +23,10 @@ export { UserHandler } from './resources/users';
 export { VouchersHandler } from './resources/vouchers';
 export { WebhookHandler } from './resources/webhooks';
 export { OrderSuppliersHandler } from './resources/order-suppliers';
+export { LocationsHandler } from './resources/locations';
+export { CouponsHandler } from './resources/coupons';
+export { TaxesHandler } from './resources/taxes';
+export { EInvoicesHandler } from './resources/einvoices';
 
 // Export types
 export {
@@ -48,6 +52,19 @@ export {
   OrderListResponse,
   Customer,
   CustomerCreateParams,
+  CustomerGroup,
+  Location,
+  LocationListResponse,
+  Coupon,
+  CouponSetUsedParams,
+  CouponSetUsedResponse,
+  Tax,
+  TaxDetailResponse,
+  EInvoiceInfo,
+  EInvoiceInfoUpdateParams,
+  EInvoicePartner,
+  EInvoiceType,
+  EInvoiceStatus,
 } from './types';
 
 // Export error classes

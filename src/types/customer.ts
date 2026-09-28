@@ -6,6 +6,9 @@ export interface Customer {
   gender?: boolean; // true: male, false: female
   birthDate?: string;
   contactNumber?: string;
+  subNumber?: string; // Số điện thoại thứ hai
+  identificationNumber?: string; // Số CCCD/CMND
+  passportNumber?: string; // Số hộ chiếu
   address?: string;
   locationName?: string;
   wardName?: string;
@@ -26,6 +29,31 @@ export interface Customer {
   branchId?: number;
   createdBy?: string;
   isActive?: boolean;
+  customerGroupDetails?: Array<{
+    id: number;
+    customerId: number;
+    groupId: number;
+  }>;
+  // Thông tin xuất hóa đơn điện tử
+  buyerNameEInvoice?: string;
+  nameEInvoice?: string;
+  addressEInvoice?: string;
+  administrativeAreaIdEInvoice?: number;
+  emailEInvoice?: string;
+  contactNumberEInvoice?: string;
+  budgetCodeEInvoice?: string;
+  bankNameEinv?: string;
+  bankNumberEinv?: string;
+}
+
+export interface CustomerGroup {
+  id: number; // Id nhóm khách hàng
+  name: string; // Tên nhóm khách hàng
+  description?: string; // Ghi chú
+  createdDate: string; // Ngày tạo
+  createdBy: number; // Id người tạo
+  retailerId: number; // Id gian hàng
+  discount?: number; // Giảm giá
   customerGroupDetails?: Array<{
     id: number;
     customerId: number;

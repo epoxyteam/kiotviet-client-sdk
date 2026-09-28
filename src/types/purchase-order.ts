@@ -113,6 +113,7 @@ export interface PurchaseOrderListParams {
   createdDate?: string;
   fromPurchaseDate?: string;
   toPurchaseDate?: string;
+  taxIds?: number[]; // ID thuế
   code?: string;
 }
 

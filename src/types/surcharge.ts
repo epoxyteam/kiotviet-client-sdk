@@ -2,9 +2,12 @@ import { KiotVietListResponse } from './common';
 
 export interface Surcharge {
   id: number;
-  code: string;
-  name: string;
-  value: number;
+  code?: string;
+  name?: string;
+  value?: number;
+  valueRatio?: number; // Phần trăm thu khác
+  surchargeCode?: string; // Mã thu khác (theo response tài liệu 2.10)
+  surchargeName?: string; // Tên thu khác (theo response tài liệu 2.10)
   isPercent: boolean;
   isAutoAdd: boolean;
   isRequired: boolean;
@@ -14,7 +17,8 @@ export interface Surcharge {
   branchId?: number;
   branchIds?: number[];
   createdBy?: string;
-  createdDate: string;
+  createdDate?: string;
+  createDate?: string; // Theo response tài liệu 2.10
   modifiedDate?: string;
 }
 

@@ -6,8 +6,12 @@ export interface Product {
   description?: string;
   basePrice: number;
   retailPrice?: number;
+  price?: number; // Giá bán trước thuế
+  priceAfterTax?: number; // Giá bán sau thuế
   categoryName?: string;
   categoryId?: number;
+  tradeMarkId?: number; // Id thương hiệu
+  tradeMarkName?: string; // Tên thương hiệu
   allowsSale: boolean;
   unit?: string;
   conversionValue?: number;
@@ -102,6 +106,20 @@ export interface Product {
   images?: string[];
   barcode?: string;
   status?: number;
+  productTaxs?: Array<{
+    id: number;
+    productId: number;
+    taxId: number;
+    value?: number;
+    name: string;
+  }>;
+  purchaseTax?: {
+    id: number;
+    productId: number;
+    taxId: number;
+    value?: number;
+    name: string;
+  };
 }
 
 export interface ProductCreateParams {
@@ -112,6 +130,8 @@ export interface ProductCreateParams {
   type?: number;
   isProductFormula?: boolean;
   basePrice: number;
+  price?: number; // Giá bán trước thuế
+  priceAfterTax?: number; // Giá bán sau thuế
   unit?: string;
   allowsSale?: boolean;
   description?: string;
@@ -126,6 +146,7 @@ export interface ProductCreateParams {
   weight?: number;
   isRewardPoint?: boolean;
   isProductSerial?: boolean;
+  masterProductId?: number; // Id hàng hóa cùng loại
   masterUnitId?: number;
   conversionValue?: number;
   inventories?: Array<{
@@ -135,6 +156,12 @@ export interface ProductCreateParams {
     cost?: number;
   }>;
   images?: string[];
+  productTaxs?: Array<{
+    taxId: number; // ID thuế bán hàng
+  }>;
+  purchaseTax?: {
+    taxId: number; // ID thuế nhập hàng
+  };
 }
 
 export interface ProductUpdateParams extends Partial<ProductCreateParams> {

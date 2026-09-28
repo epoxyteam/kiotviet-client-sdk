@@ -27,6 +27,10 @@ export interface Invoice {
   totalPayment: number;
   discount?: number;
   discountRatio?: number;
+  discountAfterTax?: number; // giảm giá hóa đơn sau thuế
+  totalTax?: number; // Tổng thuế
+  pricingMode?: number; // MODE thuế: null: trực tiếp, 0: trước thuế, 1: sau thuế
+  isApplyTaxReduction?: boolean; // Trạng thái áp dụng giảm thuế của giao dịch
   description?: string;
   status: number;
   statusValue: string;
@@ -108,6 +112,8 @@ export interface InvoiceCreateParams {
   orderId?: number;
   saleChannelId?: number;
   isApplyVoucher?: boolean;
+  totalTax?: number; // Tổng thuế
+  isApplyTaxReduction?: boolean; // Trạng thái áp dụng giảm thuế của giao dịch
   invoiceDetails: Array<{
     productId: number;
     productCode: string;
@@ -117,11 +123,17 @@ export interface InvoiceCreateParams {
     discount?: number;
     discountRatio?: number;
     note?: string;
-    serialNumbers?: string;
+    serialNumbers?: string; // Danh sách serial/IMEI, mỗi IMEI cách nhau bởi dấu phẩy
+    invoiceDetailTaxs?: Array<{
+      taxId: number; // ID thuế
+      detailTax?: number; // Số tiền chịu thuế
+      isApplyTaxReduction?: boolean;
+    }>;
   }>;
   deliveryDetail?: {
+    deliveryCode?: string;
     type?: number;
-    status: number;
+    status: number; // trạng thái vận đơn
     price?: number;
     receiver: string;
     contactNumber: string;
@@ -133,6 +145,8 @@ export interface InvoiceCreateParams {
     length?: number;
     width?: number;
     height?: number;
+    usingPriceCod?: boolean; // Thu hộ tiền
+    priceCodPayment?: number; // Số tiền thu hộ
     partnerDeliveryId?: number;
     expectedDelivery?: string;
     partnerDelivery?: {
@@ -163,6 +177,8 @@ export interface InvoiceCreateParams {
 
 export interface InvoiceUpdateParams extends Partial<Omit<InvoiceCreateParams, 'orderId'>> {
   id: number;
+  codPaymentMethod?: string; // Phương thức thanh toán thu hộ (Cash, Transfer)
+  codPaymentAccount?: number; // Id tài khoản ngân hàng nếu thanh toán chuyển khoản/thẻ
 }
 
 export interface InvoiceListParams {
@@ -182,6 +198,7 @@ export interface InvoiceListParams {
   createdDate?: string;
   fromPurchaseDate?: string;
   toPurchaseDate?: string;
+  includeSaleChannel?: boolean; // Có lấy dữ liệu SaleChannel không
 }
 
 export interface InvoiceStatusCount {

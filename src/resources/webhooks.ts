@@ -9,23 +9,11 @@ import {
   WebhookPayload,
   WebhookEvent,
   TypedWebhookPayload,
-  WebhookEventDataMap,
 } from '../types/webhook';
 import {
   CustomerUpdateWebhookPayload,
   ProductUpdateWebhookPayload,
-  ProductDeleteWebhookPayload,
-  StockUpdateWebhookPayload,
   OrderUpdateWebhookPayload,
-  InvoiceUpdateWebhookPayload,
-  CategoryUpdateWebhookPayload,
-  CategoryDeleteWebhookPayload,
-  BranchUpdateWebhookPayload,
-  BranchDeleteWebhookPayload,
-  PriceBookUpdateWebhookPayload,
-  PriceBookDeleteWebhookPayload,
-  PriceBookDetailUpdateWebhookPayload,
-  PriceBookDetailDeleteWebhookPayload,
 } from '../types/webhook-payloads';
 
 export class WebhookHandler {
@@ -51,10 +39,22 @@ export class WebhookHandler {
 
   /**
    * Create a new webhook
+   * Documentation: 2.11.1. POST /webhooks
+   * Body: { "Webhook": { "Type": string, "Url": string, "IsActive": boolean, "Description": string, "Secret": string } }
    * @param webhookData The webhook configuration data
    */
   async create(webhookData: WebhookCreateParams): Promise<Webhook> {
-    const response = await this.client.apiClient.post<Webhook>('/webhooks', webhookData);
+    const type = webhookData.type ?? webhookData.events[0];
+    const body = {
+      Webhook: {
+        Type: type,
+        Url: webhookData.url,
+        IsActive: webhookData.isActive ?? true,
+        Description: webhookData.description,
+        Secret: webhookData.secret,
+      },
+    };
+    const response = await this.client.apiClient.post<Webhook>('/webhooks', body);
     return response.data;
   }
 
@@ -97,14 +97,18 @@ export class WebhookHandler {
 
   /**
    * Verify webhook signature
+   * Hỗ trợ cả 2 định dạng header X-Hub-Signature:
+   * - `sha256=<hex>` (định dạng phổ biến)
+   * - `<hex>` (kết quả raw của HMAC SHA-256)
    * @param payload The raw webhook payload
    * @param signature The signature from X-Hub-Signature header
    * @param secret The webhook secret
    */
   verifySignature(payload: string, signature: string, secret: string): boolean {
     const expectedSignature = createHmac('sha256', secret).update(payload).digest('hex');
+    const normalized = signature.replace(/^sha256=/i, '');
 
-    return signature === expectedSignature;
+    return normalized === expectedSignature;
   }
 
   /**

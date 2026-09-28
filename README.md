@@ -37,6 +37,10 @@ Tài liệu này cung cấp hướng dẫn chi tiết về cách sử dụng cá
 - [Phụ thu (Surcharges)](#phụ-thu-surcharges)
 - [Webhooks](#webhooks)
 - [Cài đặt (Settings)](#cài-đặt-settings)
+- [Vị trí/Địa bàn (Locations)](#vị-tríđịa-bàn-locations)
+- [Coupon](#coupon)
+- [Thuế (Taxes)](#thuế-taxes)
+- [Hóa đơn điện tử (E-Invoices)](#hóa-đơn-điện-tử-e-invoices)
 
 Mỗi tài liệu API sẽ bao gồm:
 - Danh sách đầy đủ các phương thức có sẵn
@@ -286,10 +290,14 @@ interface ProductUpdateParams extends Partial<ProductCreateParams> {
 
 1. `list(params)` - Lấy danh sách khách hàng
 2. `getById(customerId)` - Lấy thông tin khách hàng theo ID
-3. `create(customerData)` - Tạo khách hàng mới
-4. `search(query, params)` - Tìm kiếm khách hàng
-5. `getByGroup(groupId, params)` - Lấy khách hàng theo nhóm
-6. `getByContactNumber(contactNumber)` - Tìm khách hàng theo số điện thoại
+3. `getByCode(code)` - Lấy thông tin khách hàng theo mã
+4. `create(customerData)` - Tạo khách hàng mới
+5. `search(query, params)` - Tìm kiếm khách hàng
+6. `getByGroup(groupId, params)` - Lấy khách hàng theo nhóm
+7. `getByContactNumber(contactNumber)` - Tìm khách hàng theo số điện thoại
+8. `bulkCreate(customers)` - Tạo nhiều khách hàng cùng lúc
+9. `bulkUpdate(customers)` - Cập nhật nhiều khách hàng cùng lúc
+10. `listGroups(params)` - Lấy danh sách nhóm khách hàng
 
 ## Chi tiết sử dụng
 
@@ -350,6 +358,54 @@ const customer = await client.customers.getByContactNumber("0901234567");
 const groupCustomers = await client.customers.getByGroup(1, {
   pageSize: 20
 });
+```
+
+### 4. Lấy khách hàng theo mã
+
+```typescript
+// Tài liệu: 2.6.2. GET /customers/code/{code}
+const customer = await client.customers.getByCode("KH0001");
+```
+
+### 5. Tạo/cập nhật nhiều khách hàng cùng lúc
+
+```typescript
+// Tạo nhiều khách hàng
+// Tài liệu: 2.6.6. POST /listaddcutomers
+await client.customers.bulkCreate([
+  { name: "Nguyễn Văn A", contactNumber: "0901111111" },
+  { name: "Trần Thị B", contactNumber: "0902222222" }
+]);
+
+// Cập nhật nhiều khách hàng
+// Tài liệu: 2.6.7. PUT /listupdatecustomers
+await client.customers.bulkUpdate([
+  { id: 1, contactNumber: "0903333333" },
+  { id: 2, email: "tranthib@email.com" }
+]);
+```
+
+### 6. Lấy danh sách nhóm khách hàng
+
+```typescript
+// Tài liệu: 2.13.1. GET /customers/group
+const groups = await client.customers.listGroups();
+// groups => { total: number, data: CustomerGroup[] }
+
+interface CustomerGroup {
+  id: number;              // Id nhóm khách hàng
+  name: string;            // Tên nhóm khách hàng
+  description?: string;    // Ghi chú
+  createdDate: string;     // Ngày tạo
+  createdBy: number;       // Id người tạo
+  retailerId: number;      // Id gian hàng
+  discount?: number;       // Giảm giá
+  customerGroupDetails?: Array<{
+    id: number;
+    customerId: number;
+    groupId: number;
+  }>;
+}
 ```
 
 ## Cấu trúc dữ liệu
@@ -692,8 +748,9 @@ enum OrderStatus {
 3. `create(purchaseOrderData)` - Tạo đơn đặt hàng mới
 4. `update(purchaseOrderId, purchaseOrderData)` - Cập nhật đơn đặt hàng
 5. `cancel(purchaseOrderId, reason)` - Hủy đơn đặt hàng
-6. `getByDateRange(fromDate, toDate, params)` - Lấy đơn đặt hàng theo khoảng thời gian
-7. `getBySupplier(supplierCode, params)` - Lấy đơn đặt hàng theo nhà cung cấp
+6. `delete(purchaseOrderId, isVoidPayment)` - Xóa phiếu nhập hàng
+7. `getByDateRange(fromDate, toDate, params)` - Lấy đơn đặt hàng theo khoảng thời gian
+8. `getBySupplier(supplierCode, params)` - Lấy đơn đặt hàng theo nhà cung cấp
 
 ## Chi tiết sử dụng
 
@@ -789,6 +846,17 @@ const updatedOrder = await client.purchaseOrders.update(123, {
 
 ```typescript
 await client.purchaseOrders.cancel(123, "Nhà cung cấp hết hàng");
+```
+
+### 5. Xóa phiếu nhập hàng
+
+```typescript
+// Tài liệu: 2.15.5. DELETE /purchaseorders?id={Id}&IsVoidPayment=true
+// Xóa không hủy phiếu thanh toán (mặc định)
+await client.purchaseOrders.delete(123);
+
+// Xóa và hủy phiếu thanh toán gắn kèm
+await client.purchaseOrders.delete(123, true);
 ```
 
 ## Cấu trúc dữ liệu
@@ -1539,106 +1607,116 @@ interface SupplierCreateParams {
 
 ## Danh sách các phương thức
 
-### Quản lý chiến dịch voucher
-1. `listCampaigns(params)` - Lấy danh sách chiến dịch voucher
-2. `getCampaign(id)` - Lấy thông tin chiến dịch theo ID
-3. `createCampaign(data)` - Tạo chiến dịch mới
-4. `updateCampaign(data)` - Cập nhật chiến dịch
-5. `deleteCampaign(id)` - Xóa chiến dịch
+### Quản lý đợt phát hành voucher (Voucher Campaign)
+1. `listCampaigns(params)` - Lấy danh sách đợt phát hành voucher
+2. `getCampaign(id)` - Lấy thông tin đợt phát hành theo ID
 
 ### Quản lý voucher
-1. `list(params)` - Lấy danh sách voucher
-2. `get(id)` - Lấy thông tin voucher theo ID
+1. `list(params)` - Lấy danh sách voucher trong đợt phát hành (bắt buộc `campaignId`)
+2. `getByCampaign(campaignId, params)` - Lấy danh sách voucher theo campaign
 3. `getByCode(code)` - Lấy voucher theo mã
+4. `create(data)` - Tạo mới voucher theo đợt phát hành
+5. `releaseGive(data)` - Phát hành voucher (hình thức tặng)
+6. `cancel(data)` - Hủy voucher
 
 ## Chi tiết sử dụng
 
-### 1. Quản lý chiến dịch voucher
+### 1. Quản lý đợt phát hành voucher
 
 ```typescript
-// Tạo chiến dịch voucher mới
-const newCampaign = await client.vouchers.createCampaign({
-  code: "SUMMER2024",              // Mã chiến dịch (bắt buộc)
-  name: "Khuyến mãi hè 2024",     // Tên chiến dịch (bắt buộc)
-  description: "Giảm giá hè 2024", // Mô tả
-  startDate: "2024-06-01",        // Ngày bắt đầu (bắt buộc)
-  endDate: "2024-08-31",          // Ngày kết thúc (bắt buộc)
-  branchId: 1,                    // ID chi nhánh (bắt buộc)
-  branchIds: [1, 2, 3],           // Danh sách chi nhánh áp dụng
-  customerGroupIds: [1, 2],       // Nhóm khách hàng được áp dụng
-  discountType: VoucherDiscountType.Percentage, // Loại giảm giá
-  discountValue: 10,              // Giá trị giảm (10%)
-  minOrderValue: 1000000,         // Giá trị đơn hàng tối thiểu
-  maxDiscountValue: 200000,       // Giảm giá tối đa
-  quantity: 1000,                 // Số lượng voucher
-  isAutoGenerate: true,           // Tự động tạo mã
-  isUnlimited: false             // Không giới hạn số lượng
-});
-
-// Lấy danh sách chiến dịch
+// Lấy danh sách đợt phát hành voucher
+// Tài liệu: 2.24.1. GET /vouchercampaign
 const campaigns = await client.vouchers.listCampaigns({
-  status: [VoucherStatus.Active],
-  fromDate: "2024-01-01",
-  toDate: "2024-12-31",
-  pageSize: 20
+  includeVoucherBranchs: true,  // Có lấy danh sách chi nhánh áp dụng
+  includeVoucherUsers: true,    // Có lấy danh sách người tạo áp dụng
+  isActive: true,               // Trạng thái đợt phát hành
+  forAllCusGroup: false,        // Áp dụng cho toàn bộ khách hàng
+  forAllUser: false             // Áp dụng cho toàn bộ người tạo
 });
 
-// Cập nhật chiến dịch
-const updatedCampaign = await client.vouchers.updateCampaign({
-  id: 123,
-  endDate: "2024-09-30",
-  maxDiscountValue: 300000
-});
-
-// Xóa chiến dịch
-await client.vouchers.deleteCampaign(123);
+// Lấy thông tin đợt phát hành theo ID
+const campaign = await client.vouchers.getCampaign(123);
 ```
 
 ### 2. Quản lý voucher
 
 ```typescript
-// Lấy danh sách voucher của một chiến dịch
+// Lấy danh sách voucher trong đợt phát hành
+// Tài liệu: 2.24.2. GET /voucher
 const vouchers = await client.vouchers.list({
-  campaignId: 123,
-  status: [VoucherStatus.Active],
-  pageSize: 20
+  campaignId: 123,              // ID đợt phát hành (bắt buộc)
+  status: VoucherStatus.Released, // Trạng thái voucher
+  lastModifiedFrom: "2024-01-01", // Ngày cập nhật cuối
+  code: "SUMMER2024ABC"         // Mã voucher (optional)
 });
 
 // Tìm voucher theo mã
 const voucher = await client.vouchers.getByCode("SUMMER2024ABC");
+```
 
-// Lấy thông tin voucher
-const voucher = await client.vouchers.get(456);
+### 3. Tạo mới voucher
+
+```typescript
+// Tạo mới voucher theo đợt phát hành
+// Tài liệu: 2.24.3. POST /voucher
+const result = await client.vouchers.create({
+  voucherCampaignId: 123,       // ID đợt phát hành đang kích hoạt
+  data: [
+    { code: "VOUCHER001" },
+    { code: "VOUCHER002" }
+  ]
+});
+```
+
+### 4. Phát hành voucher (hình thức tặng)
+
+```typescript
+// Tài liệu: 2.24.4. POST /voucher/release/give
+const result = await client.vouchers.releaseGive({
+  CampaignId: 123,              // ID đợt phát hành đang kích hoạt
+  Vouchers: [
+    { Code: "VOUCHER001" }      // Chỉ áp dụng với voucher trạng thái 0: chưa sử dụng
+  ],
+  ReleaseDate: "2024-06-01T00:00:00" // Ngày phát hành
+});
+```
+
+### 5. Hủy voucher
+
+```typescript
+// Tài liệu: 2.24.5. DELETE /voucher/cancel
+const result = await client.vouchers.cancel({
+  CampaignId: 123,              // ID đợt phát hành đang kích hoạt
+  Vouchers: [
+    { Code: "VOUCHER001" }      // Chỉ áp dụng với voucher trạng thái 0: chưa sử dụng
+  ]
+});
 ```
 
 ## Cấu trúc dữ liệu
 
-### VoucherCampaign (Chiến dịch voucher)
+### VoucherCampaign (Đợt phát hành voucher)
 
 ```typescript
 interface VoucherCampaign {
-  id: number;              // ID chiến dịch
-  code: string;           // Mã chiến dịch
-  name: string;           // Tên chiến dịch
-  description?: string;   // Mô tả
-  startDate: string;      // Ngày bắt đầu
-  endDate: string;        // Ngày kết thúc
-  status: number;         // Mã trạng thái
-  statusValue: string;    // Tên trạng thái
-  isActive: boolean;      // Đang hoạt động
-  branchId: number;       // ID chi nhánh
-  branchIds?: number[];   // Danh sách chi nhánh
-  customerGroupIds?: number[]; // Nhóm khách hàng
-  discountType: number;   // Loại giảm giá
-  discountValue: number;  // Giá trị giảm
-  minOrderValue?: number; // Đơn hàng tối thiểu
-  maxDiscountValue?: number; // Giảm tối đa
-  quantity: number;       // Số lượng
-  usedQuantity: number;   // Đã sử dụng
-  remainingQuantity: number; // Còn lại
-  isAutoGenerate: boolean; // Tự động tạo mã
-  isUnlimited: boolean;   // Không giới hạn
-  voucherProducts?: VoucherProduct[]; // Sản phẩm áp dụng
+  id: number;                    // ID đợt phát hành
+  code: string;                 // Mã đợt phát hành
+  name: string;                 // Tên đợt phát hành
+  isActive: boolean;            // Trạng thái đợt phát hành
+  startDate: string;            // Thời gian áp dụng bắt đầu
+  endDate: string;              // Thời gian áp dụng kết thúc
+  expireTime: number;           // Số ngày kể từ ngày phát hành sẽ hết hạn
+  prereqCategoryIds?: number[]; // Danh sách id nhóm hàng
+  prereqProductIds?: number[];  // Danh sách id hàng hóa
+  prereqPrice?: number;         // Tổng tiền hàng
+  quantity: number;             // Tổng số voucher
+  price: number;                // Mệnh giá
+  useVoucherCombineInvoice: boolean; // Gộp nhiều voucher trên 1 hóa đơn
+  isGlobal: boolean;            // Áp dụng cho toàn hệ thống
+  forAllCusGroup: boolean;      // Áp dụng cho toàn bộ khách hàng
+  forAllUser: boolean;          // Áp dụng cho toàn bộ người tạo
+  voucherBranchs?: Array<{ branchId: number; branchName: string }>;
+  voucherUsers?: Array<{ userId: number; userName: string }>;
 }
 ```
 
@@ -1646,23 +1724,20 @@ interface VoucherCampaign {
 
 ```typescript
 interface Voucher {
-  id: number;             // ID voucher
-  code: string;          // Mã voucher
-  campaignId: number;    // ID chiến dịch
-  campaignCode: string;  // Mã chiến dịch
-  campaignName: string;  // Tên chiến dịch
-  startDate: string;     // Ngày bắt đầu
-  endDate: string;       // Ngày kết thúc
-  status: number;        // Mã trạng thái
-  statusValue: string;   // Tên trạng thái
-  isUsed: boolean;       // Đã sử dụng
-  usedDate?: string;     // Ngày sử dụng
-  customerId?: number;   // ID khách hàng
-  customerCode?: string; // Mã khách hàng
-  customerName?: string; // Tên khách hàng
-  orderId?: number;      // ID đơn hàng
-  orderCode?: string;    // Mã đơn hàng
-  discountValue: number; // Giá trị giảm
+  id: number;                   // ID voucher
+  code: string;                // Mã voucher
+  voucherCampaignId: number;   // ID đợt phát hành voucher
+  releaseDate: string;         // Ngày phát hành
+  expireDate: string;          // Ngày hết hạn
+  usedDate?: string;           // Ngày sử dụng
+  status: number;              // Trạng thái
+  sellType: number;            // Hình thức (0: tặng, 1: bán)
+  price: number;               // Giá trị voucher
+  partnerType: string;         // Nhóm người mua nhận voucher
+  partnerId?: number;          // ID người mua nhận voucher
+  partnerName?: string;        // Tên người mua nhận voucher
+  modifiedDate?: string;       // Ngày chỉnh sửa
+  createdDate: string;         // Ngày tạo
 }
 ```
 
@@ -1670,43 +1745,36 @@ interface Voucher {
 
 ```typescript
 enum VoucherStatus {
-  Active = 1,     // Đang hoạt động
-  Inactive = 0,   // Không hoạt động
-  Used = 2,       // Đã sử dụng
-  Expired = 3     // Hết hạn
+  Unused = 0,    // Chưa sử dụng
+  Released = 1,  // Đã phát hành
+  Used = 2,      // Đã sử dụng
+  Cancelled = 3  // Đã hủy
 }
 ```
 
-### Loại giảm giá
+### Hình thức voucher
 
 ```typescript
-enum VoucherDiscountType {
-  FixedAmount = 1,  // Giảm số tiền cố định
-  Percentage = 2    // Giảm theo phần trăm
+enum VoucherSellType {
+  Gift = 0,  // Tặng
+  Sold = 1   // Bán
 }
 ```
 
 ## Ghi chú
 
-1. Chiến dịch voucher:
-   - Có thể giới hạn theo chi nhánh và nhóm khách hàng
-   - Hỗ trợ hai loại giảm giá: cố định và phần trăm
-   - Có thể tự động tạo mã voucher hoặc nhập thủ công
+1. Đợt phát hành voucher:
+   - Có thể giới hạn theo chi nhánh (`voucherBranchs`) và người tạo (`voucherUsers`)
+   - Hỗ trợ điều kiện áp dụng theo nhóm hàng/sản phẩm/giá trị đơn hàng
+   - `isGlobal`, `forAllCusGroup`, `forAllUser` xác định phạm vi áp dụng
 
-2. Giới hạn giảm giá:
-   - `minOrderValue`: Giá trị đơn hàng tối thiểu để áp dụng
-   - `maxDiscountValue`: Giới hạn số tiền giảm tối đa
-   - Đối với giảm giá theo phần trăm, luôn kiểm tra `maxDiscountValue`
+2. Trạng thái voucher theo tài liệu:
+   - `0`: chưa sử dụng
+   - `1`: đã phát hành
+   - `2`: đã sử dụng
+   - `3`: đã hủy
 
-3. Quản lý số lượng:
-   - Theo dõi số lượng đã sử dụng và còn lại
-   - Có thể tạo không giới hạn số lượng với `isUnlimited`
-   - Hệ thống tự động cập nhật số lượng khi voucher được sử dụng
-
-4. Tìm kiếm và lọc:
-   - Hỗ trợ tìm kiếm theo từ khóa (mã, tên)
-   - Lọc theo trạng thái và khoảng thời gian
-   - Phân trang với `pageSize` và `currentItem`
+3. Phát hành/hủy voucher chỉ áp dụng với voucher đang ở trạng thái `0: chưa sử dụng`
 
 ---
 
@@ -1997,7 +2065,10 @@ interface CashFlowListParams {
 2. `getById(surchargeId)` - Lấy thông tin phụ thu theo ID
 3. `create(surchargeData)` - Tạo phụ thu mới
 4. `update(surchargeId, surchargeData)` - Cập nhật phụ thu
-5. `delete(surchargeId)` - Xóa phụ thu
+5. `setActive(surchargeId, isActive)` - Cho phép/ngừng hoạt động phụ thu
+6. `activate(surchargeId)` - Cho phép hoạt động phụ thu
+7. `deactivate(surchargeId)` - Ngừng hoạt động phụ thu
+8. `delete(surchargeId)` - Xóa phụ thu
 
 ## Chi tiết sử dụng
 
@@ -2059,7 +2130,21 @@ const updatedSurcharge = await client.surcharges.update(123, {
 });
 ```
 
-### 4. Xóa phụ thu
+### 4. Cho phép/ngừng hoạt động phụ thu
+
+```typescript
+// Tài liệu: 2.10.4. POST /surcharges/{id}/activesurchage
+// Cho phép hoạt động
+await client.surcharges.activate(123);
+
+// Ngừng hoạt động
+await client.surcharges.deactivate(123);
+
+// Hoặc truyền trạng thái trực tiếp
+await client.surcharges.setActive(123, true);
+```
+
+### 5. Xóa phụ thu
 
 ```typescript
 await client.surcharges.delete(123);
@@ -2485,3 +2570,166 @@ interface Setting {
    - Các cài đặt này ảnh hưởng trực tiếp đến logic xử lý đơn hàng và tồn kho
    - Nên kiểm tra các cài đặt này trước khi thực hiện các thao tác liên quan đến bán hàng và đặt hàng
    - Điều chỉnh logic ứng dụng dựa trên các cài đặt này để đảm bảo tuân thủ quy tắc kinh doanh
+
+---
+
+# Vị trí/Địa bàn (Locations)
+
+# API Vị trí/Địa bàn (Locations)
+
+## Danh sách các phương thức
+
+1. `list(params)` - Lấy danh sách location
+2. `getById(id)` - Lấy location theo ID
+
+## Chi tiết sử dụng
+
+```typescript
+// Lấy danh sách location
+// Tài liệu: 2.21. GET /locations
+const locations = await client.locations.list({
+  pageSize: 100
+});
+
+// Lấy location theo ID
+const location = await client.locations.getById(1001);
+```
+
+## Cấu trúc dữ liệu
+
+```typescript
+interface Location {
+  id: number;            // Id location
+  name: string;          // Tên location
+  normalName: string;    // Tên không dấu
+}
+```
+
+---
+
+# Coupon
+
+# API Coupon
+
+## Danh sách các phương thức
+
+1. `list(params)` - Lấy danh sách coupon
+2. `setUsed(codes)` - Cập nhật trạng thái coupon về "Đã sử dụng"
+3. `setUsedByParams(data)` - Cập nhật trạng thái coupon với payload tùy chỉnh
+
+## Chi tiết sử dụng
+
+```typescript
+// Cập nhật trạng thái coupon về "Đã sử dụng"
+// Tài liệu: 2.23. POST /coupons/setused
+const result = await client.coupons.setUsed(["COUPON001", "COUPON002"]);
+// result => { message: string, dataError?: [{ code: string }] }
+```
+
+## Cấu trúc dữ liệu
+
+```typescript
+interface CouponSetUsedParams {
+  coupons: Array<{ code: string }>; // Mã coupon (bắt buộc)
+}
+
+interface CouponSetUsedResponse {
+  message: string;
+  dataError?: Array<{ code: string }>; // Thông báo lỗi tương ứng với mã coupon
+}
+```
+
+---
+
+# Thuế (Taxes)
+
+# API Thuế (Taxes)
+
+## Danh sách các phương thức
+
+1. `list()` - Lấy danh sách thuế được hỗ trợ
+2. `getAll()` - Lấy danh sách thuế dạng mảng phẳng
+
+## Chi tiết sử dụng
+
+```typescript
+// Tài liệu: 2.27.1. GET /tax/detail
+const taxDetail = await client.taxes.list();
+// taxDetail => { data: Tax[], message: string, isSuccess: boolean }
+
+const taxes = await client.taxes.getAll();
+// taxes => Tax[] (chỉ lấy phần data)
+```
+
+## Cấu trúc dữ liệu
+
+```typescript
+interface Tax {
+  taxId: number;          // ID của loại thuế
+  taxName: string;        // Tên loại thuế
+  value: number | null;   // Giá trị % thuế, null nếu không xác định
+  type: "Khấu trừ" | "Trực tiếp"; // Phương pháp tính thuế
+}
+```
+
+---
+
+# Hóa đơn điện tử (E-Invoices)
+
+# API Hóa đơn điện tử (E-Invoices)
+
+## Danh sách các phương thức
+
+1. `updateInfo(items)` - Cập nhật thông tin phát hành HĐĐT cho nhiều hóa đơn
+2. `updateInfoByParams(data)` - Cập nhật thông tin HĐĐT với payload tùy chỉnh
+
+## Chi tiết sử dụng
+
+```typescript
+// Cập nhật thông tin phát hành HĐĐT
+// Tài liệu: 2.28.1. PUT /einvoices/info
+const result = await client.einvoices.updateInfo([
+  {
+    invoiceId: 1234567,               // Mã hóa đơn (bắt buộc)
+    invoiceRefId: "3fa85f64-5717-4562-b3fc-2c963f66afa6", // UUID HĐĐT (bắt buộc)
+    partnerTransactionCode: "FPT-TXN-00123", // Mã tra cứu hóa đơn tại nhà cung cấp
+    partner: EInvoicePartner.FPT,     // MISA=0, VNPT=1, VIETTEL=2, FPT=3, KIOTVIET=4
+    status: EInvoiceStatus.PublishSuccess, // Trạng thái đẩy hóa đơn
+    invoiceNumber: "00000010",        // Số hóa đơn điện tử
+    type: EInvoiceType.NORMAL,        // 0: NORMAL, 1: POS
+    publishDate: "2026-05-07T10:30:00", // Ngày phát hành
+    serial: "C24TAA"                  // Ký hiệu hóa đơn
+  }
+]);
+```
+
+## Cấu trúc dữ liệu
+
+```typescript
+interface EInvoiceInfo {
+  invoiceId: number;            // Mã hóa đơn (bắt buộc)
+  invoiceRefId: string;         // UUID của hóa đơn điện tử (bắt buộc)
+  partnerTransactionCode?: string; // Mã tra cứu hóa đơn tại nhà cung cấp
+  partner: EInvoicePartner;     // Nhà cung cấp (bắt buộc)
+  status: number;               // Trạng thái đẩy hóa đơn (bắt buộc)
+  invoiceNumber?: string;       // Số hóa đơn điện tử
+  type: EInvoiceType;           // Loại phát hành mẫu hóa đơn (bắt buộc)
+  publishDate?: string;         // Ngày phát hành hóa đơn điện tử
+  serial?: string;              // Ký hiệu hóa đơn
+}
+
+enum EInvoicePartner {
+  MISA = 0, VNPT = 1, VIETTEL = 2, FPT = 3, KIOTVIET = 4
+}
+
+enum EInvoiceType {
+  NORMAL = 0,  // Phát hành hóa đơn thông thường
+  POS = 1      // Phát hành hóa đơn từ MTT
+}
+```
+
+## Ghi chú
+
+1. Lưu ý khi sử dụng API HĐĐT:
+   - Hóa đơn đã được phát hành HĐĐT từ hệ thống KiotViet sẽ không thể cập nhật qua API này
+   - Hóa đơn đã được cập nhật HĐĐT qua API này có thể được cập nhật lại với toàn bộ thông tin

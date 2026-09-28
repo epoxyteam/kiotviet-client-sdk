@@ -15,10 +15,12 @@ export class ProductHandler {
 
   /**
    * Get a product by its ID
+   * Documentation: 2.4.2. GET /products/{id}
    * @param productId The ID of the product to retrieve
+   * @param options Optional query parameters (vd: includeSoftDeletedAttribute)
    */
-  async getById(productId: number): Promise<Product> {
-    const response = await this.client.apiClient.get<Product>(`/products/${productId}`);
+  async getById(productId: number, options: { includeSoftDeletedAttribute?: boolean } = {}): Promise<Product> {
+    const response = await this.client.apiClient.get<Product>(`/products/${productId}`, { params: options });
     return response.data;
   }
 

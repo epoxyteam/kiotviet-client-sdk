@@ -1,7 +1,7 @@
 import { KiotVietClient } from '../client';
 import { KiotVietListResponse, CustomerCreateParams, CustomerUpdateParams } from '../types';
 import { ValidationError } from '../errors';
-import { Customer } from '../types';
+import { Customer, CustomerGroup } from '../types';
 
 export class CustomerHandler {
   constructor(private client: KiotVietClient) {}
@@ -27,6 +27,16 @@ export class CustomerHandler {
   }
 
   /**
+   * Get a customer by their code
+   * @param code The code of the customer to retrieve
+   * Documentation: 2.6.2. GET /customers/code/{code}
+   */
+  async getByCode(code: string): Promise<Customer> {
+    const response = await this.client.apiClient.get<Customer>(`/customers/code/${code}`);
+    return response.data;
+  }
+
+  /**
    * Create a new customer
    * @param customerData The customer data to create
    * Documentation: POST /customers
@@ -42,15 +52,16 @@ export class CustomerHandler {
   }
 
   /**
-   * Search customers by keyword
-   * @param query Search query
+   * Search customers by name
+   * @param query Search query (matches against customer name)
    * @param params Additional filter parameters
+   * Documentation: 2.6.1. GET /customers?name={query}
    */
   async search(query: string, params: Record<string, any> = {}): Promise<KiotVietListResponse<Customer>> {
     const response = await this.client.apiClient.get<KiotVietListResponse<Customer>>('/customers', {
       params: {
         ...params,
-        keyword: query,
+        name: query,
       },
     });
     return response.data;
@@ -60,12 +71,13 @@ export class CustomerHandler {
    * Get customers by group ID
    * @param groupId The ID of the customer group
    * @param params Additional filter parameters
+   * Documentation: 2.6.1. GET /customers?groupId={groupId}
    */
   async getByGroup(groupId: number, params: Record<string, any> = {}): Promise<KiotVietListResponse<Customer>> {
     const response = await this.client.apiClient.get<KiotVietListResponse<Customer>>('/customers', {
       params: {
         ...params,
-        customerGroupId: groupId,
+        groupId,
       },
     });
     return response.data;
@@ -107,5 +119,38 @@ export class CustomerHandler {
    */
   async delete(customerId: number): Promise<void> {
     await this.client.apiClient.delete(`/customers/${customerId}`);
+  }
+
+  /**
+   * Add multiple customers at once
+   * @param customers Array of customer data to create
+   * Documentation: 2.6.6. POST /listaddcutomers  { "listCustomers": [...] }
+   */
+  async bulkCreate(customers: CustomerCreateParams[]): Promise<void> {
+    await this.client.apiClient.post('/listaddcutomers', {
+      listCustomers: customers,
+    });
+  }
+
+  /**
+   * Update multiple customers at once
+   * @param customers Array of customer data to update (id bắt buộc cho mỗi khách hàng)
+   * Documentation: 2.6.7. PUT /listupdatecustomers  { "listCustomers": [...] }
+   */
+  async bulkUpdate(customers: CustomerUpdateParams[]): Promise<void> {
+    await this.client.apiClient.put('/listupdatecustomers', {
+      listCustomers: customers,
+    });
+  }
+
+  /**
+   * Get list of customer groups
+   * Documentation: 2.13.1. GET /customers/group
+   */
+  async listGroups(params: Record<string, any> = {}): Promise<{ total: number; data: CustomerGroup[] }> {
+    const response = await this.client.apiClient.get<{ total: number; data: CustomerGroup[] }>('/customers/group', {
+      params,
+    });
+    return response.data;
   }
 }

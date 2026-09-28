@@ -2,8 +2,10 @@ import { KiotVietListResponse } from './common';
 
 export interface Branch {
   id: number;
-  branchId: string;
-  name: string;
+  branchId?: string;
+  name?: string;
+  branchName?: string; // Alias theo response tài liệu 2.7
+  branchCode?: string; // Mã chi nhánh theo response tài liệu 2.7
   address: string;
   wardName?: string;
   districtName?: string;

@@ -77,26 +77,37 @@ export interface OrderCreateParams {
   purchaseDate?: string;
   branchId: number;
   customerId?: number;
+  soldById?: number; // Id người bán
+  cashierId?: number; // Id người tạo đơn đặt hàng (mặc định Admin)
   discount?: number;
   description?: string;
   method?: string;
   totalPayment?: number;
-  accountId?: number;
-  makeInvoice?: boolean;
+  accountId?: number; // Id tài khoản ngân hàng nếu method là TRANSFER, CARD
+  makeInvoice?: boolean; // Tạo hóa đơn từ đơn đặt hàng
   saleChannelId?: number;
   isApplyVoucher?: boolean;
+  usingCod?: boolean;
+  totalTax?: number; // Tổng thuế
+  isApplyTaxReduction?: boolean; // Trạng thái áp dụng giảm thuế của giao dịch
   orderDetails: Array<{
     productId: number;
     productCode: string;
     productName: string;
-    isMaster: boolean;
+    isMaster?: boolean; // true: hàng hóa dòng chính, false: dòng phụ
     quantity: number;
     price: number;
     discount?: number;
     discountRatio?: number;
     note?: string;
+    orderDetailTaxs?: Array<{
+      taxId: number; // ID thuế
+      detailTax?: number; // Giá trị thuế của hàng hóa
+      isApplyTaxReduction?: boolean;
+    }>;
   }>;
   orderDelivery?: {
+    deliveryCode?: string;
     type?: number;
     price?: number;
     receiver: string;

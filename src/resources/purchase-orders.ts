@@ -103,4 +103,19 @@ export class PurchaseOrderHandler {
     });
     return response.data;
   }
+
+  /**
+   * Delete a purchase order
+   * Documentation: 2.15.5. DELETE /purchaseorders?id={Id}&IsVoidPayment=true
+   * @param purchaseOrderId The ID of the purchase order to delete
+   * @param isVoidPayment Whether to void the associated payment (mặc định: không hủy phiếu thanh toán)
+   */
+  async delete(purchaseOrderId: number, isVoidPayment = false): Promise<void> {
+    await this.client.apiClient.delete('/purchaseorders', {
+      params: {
+        id: purchaseOrderId,
+        IsVoidPayment: isVoidPayment,
+      },
+    });
+  }
 }
